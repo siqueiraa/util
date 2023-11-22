@@ -9,6 +9,14 @@ import (
 	"time"
 )
 
+func IsMultipleOf5Minutes() bool {
+	currentTime := time.Now()
+	currentMinute := currentTime.Minute()
+
+	// Check if the current minute is a multiple of 5
+	return currentMinute%5 == 0
+}
+
 func Convert_ts_to_tz(x int64, tz string) (time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
