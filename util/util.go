@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+func CalculatePercentageDifference(a, b float64) float64 {
+	if a == 0 {
+		// Avoid division by zero
+		return 0
+	}
+
+	percentageDifference := ((b - a) / a) * 100
+	return percentageDifference
+}
+
 func CalculateMovingAverage(values []float64, window int) []float64 {
 	if len(values) == 0 || window <= 0 {
 		return nil
