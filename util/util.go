@@ -9,6 +9,24 @@ import (
 	"time"
 )
 
+func CalculateMovingAverage(values []float64, window int) []float64 {
+	if len(values) == 0 || window <= 0 {
+		return nil
+	}
+
+	var maValues []float64
+
+	for i := 0; i < len(values)-window+1; i++ {
+		sum := 0.0
+		for j := i; j < i+window; j++ {
+			sum += values[j]
+		}
+		maValues = append(maValues, sum/float64(window))
+	}
+
+	return maValues
+}
+
 func IsMultipleOf5Minutes() bool {
 	currentTime := time.Now()
 	currentMinute := currentTime.Minute()
