@@ -87,7 +87,7 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 		currentOHLCV["high"] = max(currentOHLCV["high"].(float64), entry["high"].(float64))
 		currentOHLCV["low"] = min(currentOHLCV["low"].(float64), entry["low"].(float64))
 		currentOHLCV["close"] = entry["close"]
-		currentOHLCV["volume"] = currentOHLCV["volume"].(int) + entry["volume"].(int)
+		currentOHLCV["volume"] = currentOHLCV["volume"].(float64) + entry["volume"].(float64)
 	}
 
 	// Add the last resampled data point
