@@ -167,7 +167,7 @@ func CalculateElapsedTime(inicio time.Time) string {
 	return formattedTime
 }
 
-func keepRecordsLast5Minutes(data []map[string]interface{}) []map[string]interface{} {
+func keepRecordsLastxMinutes(data []map[string]interface{}, minutes float64) []map[string]interface{} {
 	results := []map[string]interface{}{}
 	now := time.Now()
 
@@ -181,7 +181,7 @@ func keepRecordsLast5Minutes(data []map[string]interface{}) []map[string]interfa
 		// Calculate the difference in minutes between the current time and the "event_time"
 		diff := now.Sub(eventTime).Minutes()
 
-		if diff <= 2 {
+		if diff <= minutes {
 			results = append(results, record)
 		}
 	}
@@ -244,11 +244,7 @@ func Quantile(data []float64, p float64) float64 {
 	return data[lower] + fracPart*(data[upper]-data[lower])
 }
 
-func frac(x float64) float64 {
-	return x - float64(int(x))
-}
-
-func KeepHistoryMinute(data []map[string]interface{}) []map[string]interface{} {
+func KeepHistoryMinute(data []map[string]interface{}, keepMinutes float64) []map[string]interface{} {
 	// Use a map to track the most recent record for each minute and symbol
 	latestRecords := make(map[string]map[string]interface{})
 
@@ -281,7 +277,7 @@ func KeepHistoryMinute(data []map[string]interface{}) []map[string]interface{} {
 		results = append(results, record)
 	}
 
-	results = keepRecordsLast5Minutes(results)
+	results = keepRecordsLastxMinutes(results, keepMinutes)
 
 	return results
 }
