@@ -27,7 +27,7 @@ func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} 
 		newRow := make(map[string]interface{}, len(row))
 		for _, col := range columnOrder {
 			if timestamp, ok := row[col].(time.Time); ok {
-				newRow[col] = timestamp.Format(time.RFC3339)
+				newRow[col] = timestamp
 			} else if strVal, ok := row[col].(string); ok {
 				// Try to parse string as time.Time
 				if parsedTime, err := time.Parse(time.RFC3339, strVal); err == nil {
