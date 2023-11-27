@@ -9,6 +9,71 @@ import (
 	"time"
 )
 
+// ResampleOHLCV takes a slice of OHLCV data (as maps) and resamples it to the specified time frame
+func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration) []map[string]interface{} {
+	var resampledData []map[string]interface{}
+
+	var currentIntervalStart time.Time
+	var currentOHLCV map[string]interface{}
+
+	for _, entry := range data {
+		entryTime, ok := entry["time"].(time.Time)
+		if !ok {
+			// Handle error or skip entry
+			continue
+		}
+
+		// Round the entry time to the nearest targetTimeFrame interval
+		roundedTime := roundToInterval(entryTime, targetTimeFrame)
+
+		// Check if the current interval has started
+		if currentIntervalStart.IsZero() {
+			currentIntervalStart = roundedTime
+			currentOHLCV = entry
+			currentOHLCV["time"] = roundedTime
+		}
+
+		// Check if we need to move to the next targetTimeFrame interval
+		if roundedTime.Sub(currentIntervalStart) >= targetTimeFrame {
+			resampledData = append(resampledData, currentOHLCV)
+
+			// Reset for the next targetTimeFrame interval
+			currentIntervalStart = roundedTime
+			currentOHLCV = entry
+			currentOHLCV["time"] = roundedTime
+		}
+
+		// Update the current OHLCV with the new data
+		currentOHLCV["high"] = max(currentOHLCV["high"].(float64), entry["high"].(float64))
+		currentOHLCV["low"] = min(currentOHLCV["low"].(float64), entry["low"].(float64))
+		currentOHLCV["close"] = entry["close"]
+		currentOHLCV["volume"] = currentOHLCV["volume"].(int) + entry["volume"].(int)
+	}
+
+	// Add the last resampled data point
+	resampledData = append(resampledData, currentOHLCV)
+
+	return resampledData
+}
+
+func roundToInterval(t time.Time, interval time.Duration) time.Time {
+	return t.Round(interval)
+}
+
+func max(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func min(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func CalculatePercentageDifference(a, b float64) float64 {
 	if a == 0 {
 		// Avoid division by zero
