@@ -10,6 +10,45 @@ import (
 	"time"
 )
 
+func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} {
+	if len(data) == 0 {
+		return nil
+	}
+
+	// Infer column order from the first row
+	var columnOrder []string
+	for col := range data[0] {
+		columnOrder = append(columnOrder, col)
+	}
+
+	newData := make([]map[string]interface{}, len(data))
+
+	for i, row := range data {
+		newRow := make(map[string]interface{}, len(row))
+		for _, col := range columnOrder {
+			if timestamp, ok := row[col].(time.Time); ok {
+				newRow[col] = timestamp.Format(time.RFC3339)
+			} else if strVal, ok := row[col].(string); ok {
+				// Try to parse string as time.Time
+				if parsedTime, err := time.Parse(time.RFC3339, strVal); err == nil {
+					newRow[col] = parsedTime.Format(time.RFC3339)
+				} else if num, err := strconv.ParseFloat(strVal, 64); err == nil {
+					// If conversion fails, try to convert string number to float64
+					newRow[col] = num
+				} else {
+					// If all conversions fail, keep the original string value
+					newRow[col] = row[col]
+				}
+			} else {
+				newRow[col] = row[col]
+			}
+		}
+		newData[i] = newRow
+	}
+
+	return newData
+}
+
 // ResampleOHLCV takes a slice of OHLCV data (as maps) and resamples it to the specified time frame
 func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration) []map[string]interface{} {
 	var resampledData []map[string]interface{}
@@ -243,41 +282,6 @@ func Quantile(data []float64, p float64) float64 {
 	// Interpolate between the two nearest data points
 	fracPart := index - float64(lower)
 	return data[lower] + fracPart*(data[upper]-data[lower])
-}
-
-func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} {
-	if len(data) == 0 {
-		return nil
-	}
-	// Infer column order from the first row
-	var columnOrder []string
-	for col := range data[0] {
-		columnOrder = append(columnOrder, col)
-	}
-
-	newData := make([]map[string]interface{}, len(data))
-
-	for i, row := range data {
-		newRow := make(map[string]interface{}, len(row))
-		for _, col := range columnOrder {
-			if timestamp, ok := row[col].(time.Time); ok {
-				newRow[col] = timestamp.Format(time.RFC3339)
-			} else if strNum, ok := row[col].(string); ok {
-				// Try to convert string number to float64
-				if num, err := strconv.ParseFloat(strNum, 64); err == nil {
-					newRow[col] = num
-				} else {
-					// If conversion fails, keep the original string value
-					newRow[col] = row[col]
-				}
-			} else {
-				newRow[col] = row[col]
-			}
-		}
-		newData[i] = newRow
-	}
-
-	return newData
 }
 
 func KeepHistoryMinute(data []map[string]interface{}, keepMinutes float64) []map[string]interface{} {
