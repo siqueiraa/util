@@ -96,7 +96,6 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 
 	return resampledData
 }
-
 func roundToInterval(t time.Time, interval time.Duration) time.Time {
 	return t.Add(-time.Duration(t.UnixNano()) % interval)
 }
