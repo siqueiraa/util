@@ -161,7 +161,7 @@ func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} 
 
 // ResampleOHLCV takes a slice of OHLCV data (as maps) and resamples it to the specified time frame
 func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration) []map[string]interface{} {
-	resampledData := []map[string]interface{}{}
+	resampledData := make([]map[string]interface{}, 0)
 
 	for _, entry := range data {
 		entryTime, ok := entry["time"].(time.Time)
@@ -175,29 +175,21 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 			// Handle error or skip entry without symbol
 			continue
 		}
+
 		// Round the entry time to the nearest targetTimeFrame interval
 		roundedTime := roundToInterval(entryTime, targetTimeFrame)
 
 		// Check if the current interval has started
-		if len(resampledData) == 0 {
-			resampledData = append(resampledData, map[string]interface{}{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol})
-			continue
-		}
-
-		// Check if we need to move to the next targetTimeFrame interval
-		lastOHLCV := resampledData[len(resampledData)-1]
-		lastIntervalStart := lastOHLCV["time"].(time.Time)
-
-		if roundedTime.Sub(lastIntervalStart) >= targetTimeFrame {
+		if len(resampledData) == 0 || resampledData[len(resampledData)-1]["symbol"] != symbol {
 			// Create a new OHLCV entry for the next targetTimeFrame interval
 			newOHLCV := map[string]interface{}{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol}
 			resampledData = append(resampledData, newOHLCV)
 		} else {
 			// Update the current OHLCV with the new data
+			lastOHLCV := resampledData[len(resampledData)-1]
 			lastOHLCV["high"] = max(lastOHLCV["high"].(float64), entry["high"].(float64))
 			lastOHLCV["low"] = min(lastOHLCV["low"].(float64), entry["low"].(float64))
 			lastOHLCV["close"] = entry["close"]
-			lastOHLCV["symbol"] = symbol
 
 			// Cast existing volume to float64 before updating
 			existingVolume, _ := lastOHLCV["volume"].(float64)
