@@ -48,6 +48,7 @@ func GenerateParquet(data []interface{}) error {
 		// Assign the struct instance to the slice
 		structSlice.Index(i).Set(structInstance)
 	}
+
 	// Write to Parquet file
 	fw, err := local.NewLocalFileWriter("output.parquet")
 	if err != nil {
