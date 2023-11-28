@@ -3,12 +3,123 @@ package util
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math"
 	"reflect"
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/parquet"
+	"github.com/xitongsys/parquet-go/writer"
 )
+
+func generateParquet(data []interface{}) error {
+	log.Println("generating parquet file")
+
+	// Get the sample map from the first element
+	sampleMap, ok := data[0].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("invalid data type, expected map[string]interface{}")
+	}
+
+	// Generate struct type dynamically
+	structType := mapToStructWithTags(sampleMap)
+
+	// Create a new struct slice with the appropriate type
+	structSlice := reflect.MakeSlice(reflect.SliceOf(structType), len(data), len(data))
+
+	// Populate the struct instances
+	for i, item := range data {
+		structInstance := reflect.New(structType).Elem()
+
+		// Set values for each field
+		mapData, ok := item.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("invalid item type, expected map[string]interface{}")
+		}
+
+		for key, value := range mapData {
+			field := structInstance.FieldByName(key)
+			field.Set(reflect.ValueOf(value))
+		}
+
+		// Assign the struct instance to the slice
+		structSlice.Index(i).Set(structInstance)
+	}
+
+	// Write to Parquet file
+	fw, err := local.NewLocalFileWriter("output.parquet")
+	if err != nil {
+		return err
+	}
+	defer fw.Close()
+
+	pw, err := writer.NewParquetWriter(fw, structSlice.Type(), int64(structSlice.Len()))
+	if err != nil {
+		return err
+	}
+	defer pw.WriteStop()
+
+	// Compression type
+	pw.CompressionType = parquet.CompressionCodec_GZIP
+
+	// Write each struct instance to Parquet
+	for i := 0; i < structSlice.Len(); i++ {
+		if err = pw.Write(structSlice.Index(i).Interface()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// mapToStructWithTags creates a struct dynamically from a sample map with JSON tags.
+func mapToStructWithTags(sampleMap map[string]interface{}) reflect.Type {
+	// Create a slice to store struct fields
+	var fields []reflect.StructField
+
+	// Iterate over the map and add fields to the slice with types
+	for key, value := range sampleMap {
+		fields = append(fields, reflect.StructField{
+			Name: key,
+			Type: reflect.TypeOf(value),
+			Tag:  reflect.StructTag(fmt.Sprintf(`parquet:"name=%s, type=%s, encoding=PLAIN_DICTIONARY" json:"%s"`, key, reflect.TypeOf(value), key)),
+		})
+	}
+
+	// Create a new struct type
+	return reflect.StructOf(fields)
+}
+
+func MapsToStructs(sampleMap map[string]interface{}, data []map[string]interface{}) interface{} {
+	// Get the struct type based on the sample map
+	structType := mapToStructWithTags(sampleMap)
+
+	// Create a slice type for the struct type
+	sliceType := reflect.SliceOf(structType)
+
+	// Create a new slice with the appropriate type
+	structSlice := reflect.MakeSlice(sliceType, len(data), len(data))
+
+	// Iterate over the data and populate the struct instances
+	for i, mapData := range data {
+		structInstance := reflect.New(structType).Elem()
+
+		// Set values for each field
+		for key, value := range mapData {
+			field := structInstance.FieldByName(key)
+			field.Set(reflect.ValueOf(value))
+		}
+
+		// Append the struct instance to the slice
+		structSlice.Index(i).Set(structInstance)
+	}
+
+	// Return the slice of struct instances
+	return structSlice.Interface()
+}
 
 func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} {
 	if len(data) == 0 {
