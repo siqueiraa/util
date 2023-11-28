@@ -17,7 +17,6 @@ import (
 
 func GenerateParquet(data []interface{}) error {
 	log.Println("generating parquet file")
-
 	// Get the sample map from the first element
 	sampleMap, ok := data[0].(map[string]interface{})
 	if !ok {
