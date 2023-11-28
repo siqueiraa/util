@@ -162,7 +162,6 @@ func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} 
 // ResampleOHLCV takes a slice of OHLCV data (as maps) and resamples it to the specified time frame
 func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration) []map[string]interface{} {
 	resampledData := make([]map[string]interface{}, 0)
-
 	for _, entry := range data {
 		entryTime, ok := entry["time"].(time.Time)
 		if !ok {
