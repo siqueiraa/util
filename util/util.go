@@ -160,8 +160,8 @@ func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} 
 }
 
 // ResampleOHLCV takes a slice of OHLCV data (as maps) and resamples it to the specified time frame
-func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration) map[string][]map[string]interface{} {
-	resampledData := make(map[string][]map[string]interface{})
+func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration) []map[string]interface{} {
+	resampledData := []map[string]interface{}{}
 
 	for _, entry := range data {
 		entryTime, ok := entry["time"].(time.Time)
@@ -180,19 +180,19 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 		roundedTime := roundToInterval(entryTime, targetTimeFrame)
 
 		// Check if the current interval has started
-		if _, exists := resampledData[symbol]; !exists {
-			resampledData[symbol] = []map[string]interface{}{{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol}}
+		if len(resampledData) == 0 {
+			resampledData = append(resampledData, map[string]interface{}{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol})
 			continue
 		}
+
 		// Check if we need to move to the next targetTimeFrame interval
-		lastIndex := len(resampledData[symbol]) - 1
-		lastOHLCV := resampledData[symbol][lastIndex]
+		lastOHLCV := resampledData[len(resampledData)-1]
 		lastIntervalStart := lastOHLCV["time"].(time.Time)
 
 		if roundedTime.Sub(lastIntervalStart) >= targetTimeFrame {
 			// Create a new OHLCV entry for the next targetTimeFrame interval
 			newOHLCV := map[string]interface{}{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol}
-			resampledData[symbol] = append(resampledData[symbol], newOHLCV)
+			resampledData = append(resampledData, newOHLCV)
 		} else {
 			// Update the current OHLCV with the new data
 			lastOHLCV["high"] = max(lastOHLCV["high"].(float64), entry["high"].(float64))
@@ -208,6 +208,7 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 
 	return resampledData
 }
+
 func roundToInterval(t time.Time, interval time.Duration) time.Time {
 	return t.Add(-time.Duration(t.UnixNano()) % interval)
 }
