@@ -45,7 +45,6 @@ func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} 
 		}
 		newData[i] = newRow
 	}
-
 	return newData
 }
 
