@@ -53,6 +53,7 @@ func GenerateParquet(data []interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	defer fw.Close()
 
 	pw, err := writer.NewParquetWriter(fw, structSlice.Type(), int64(structSlice.Len()))
