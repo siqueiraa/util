@@ -74,7 +74,6 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 			resampledData[symbol] = []map[string]interface{}{{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol}}
 			continue
 		}
-
 		// Check if we need to move to the next targetTimeFrame interval
 		lastIndex := len(resampledData[symbol]) - 1
 		lastOHLCV := resampledData[symbol][lastIndex]
