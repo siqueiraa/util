@@ -89,10 +89,10 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 			lastOHLCV["low"] = min(lastOHLCV["low"].(float64), entry["low"].(float64))
 			lastOHLCV["close"] = entry["close"]
 			lastOHLCV["symbol"] = symbol
-			// Cast existing volume and new entry's volume to float64 before addition
+
+			// Cast existing volume to float64 before updating
 			existingVolume, _ := lastOHLCV["volume"].(float64)
-			newVolume, _ := entry["volume"].(float64)
-			lastOHLCV["volume"] = existingVolume + newVolume
+			lastOHLCV["volume"] = existingVolume + entry["volume"].(float64)
 		}
 	}
 
