@@ -125,7 +125,6 @@ func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} 
 	if len(data) == 0 {
 		return nil
 	}
-
 	// Infer column order from the first row
 	var columnOrder []string
 	for col := range data[0] {
