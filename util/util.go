@@ -175,7 +175,6 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 			// Handle error or skip entry without symbol
 			continue
 		}
-
 		// Round the entry time to the nearest targetTimeFrame interval
 		roundedTime := roundToInterval(entryTime, targetTimeFrame)
 
