@@ -15,7 +15,7 @@ import (
 	"github.com/xitongsys/parquet-go/writer"
 )
 
-func generateParquet(data []interface{}) error {
+func GenerateParquet(data []interface{}) error {
 	log.Println("generating parquet file")
 
 	// Get the sample map from the first element
