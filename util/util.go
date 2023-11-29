@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
 	"time"
 
-	"github.com/xitongsys/parquet-go-source/local"
-	"github.com/xitongsys/parquet-go/parquet"
-	"github.com/xitongsys/parquet-go/writer"
+	"github.com/parquet-go/parquet-go"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -57,28 +56,18 @@ func GenerateParquet(data []map[string]interface{}) error {
 		structSlice.Index(i).Set(structInstance)
 	}
 
-	// Write to Parquet file
-	fw, err := local.NewLocalFileWriter("output.parquet")
-	if err != nil {
-		return err
-	}
-	defer fw.Close()
-
-	pw, err := writer.NewParquetWriter(fw, structType, int64(structSlice.Len()))
-	if err != nil {
-		return err
-	}
-	defer pw.WriteStop()
-
-	// Compression type
-	pw.CompressionType = parquet.CompressionCodec_GZIP
+	f, _ := os.CreateTemp("", "parquet-example-")
+	writer := parquet.NewWriter(f)
 
 	// Write each struct instance to Parquet
 	for i := 0; i < structSlice.Len(); i++ {
-		if err = pw.Write(structSlice.Index(i).Interface()); err != nil {
+		if err := writer.Write(structSlice.Index(i).Interface()); err != nil {
 			return err
 		}
 	}
+
+	_ = writer.Close()
+	_ = f.Close()
 
 	return nil
 }
