@@ -15,13 +15,15 @@ import (
 	"github.com/xitongsys/parquet-go/writer"
 )
 
-func GenerateParquet(data []interface{}) error {
+func GenerateParquet(data []map[string]interface{}) error {
 	log.Println("generating parquet file")
+
 	// Get the sample map from the first element
-	sampleMap, ok := data[0].(map[string]interface{})
-	if !ok {
-		return fmt.Errorf("invalid data type, expected map[string]interface{}")
+	if len(data) == 0 {
+		return errors.New("empty data slice")
 	}
+
+	sampleMap := data[0]
 
 	// Generate struct type dynamically
 	structType := mapToStructWithTags(sampleMap)
@@ -30,32 +32,29 @@ func GenerateParquet(data []interface{}) error {
 	structSlice := reflect.MakeSlice(reflect.SliceOf(structType), len(data), len(data))
 
 	// Populate the struct instances
-	for i, item := range data {
+	for i, mapData := range data {
 		structInstance := reflect.New(structType).Elem()
 
 		// Set values for each field
-		mapData, ok := item.(map[string]interface{})
-		if !ok {
-			return fmt.Errorf("invalid item type, expected map[string]interface{}")
-		}
-
 		for key, value := range mapData {
 			field := structInstance.FieldByName(key)
-			field.Set(reflect.ValueOf(value))
+			if field.IsValid() {
+				field.Set(reflect.ValueOf(value))
+			}
 		}
 
 		// Assign the struct instance to the slice
 		structSlice.Index(i).Set(structInstance)
 	}
+
 	// Write to Parquet file
 	fw, err := local.NewLocalFileWriter("output.parquet")
 	if err != nil {
 		return err
 	}
-
 	defer fw.Close()
 
-	pw, err := writer.NewParquetWriter(fw, structSlice.Type(), int64(structSlice.Len()))
+	pw, err := writer.NewParquetWriter(fw, structType, int64(structSlice.Len()))
 	if err != nil {
 		return err
 	}
