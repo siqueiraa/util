@@ -22,7 +22,6 @@ func GenerateParquet(data []map[string]interface{}) error {
 	if len(data) == 0 {
 		return errors.New("empty data slice")
 	}
-
 	sampleMap := data[0]
 
 	// Generate struct type dynamically
