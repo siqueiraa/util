@@ -49,7 +49,7 @@ func ReadParquet(fileName string, slicePtr interface{}) error {
 
 	return nil
 }
-func GenerateParquet(data []map[string]interface{}) error {
+func GenerateParquet(data []map[string]interface{}, fileName string) error {
 	log.Println("generating parquet file")
 
 	// Get the sample map from the first element
@@ -88,8 +88,6 @@ func GenerateParquet(data []map[string]interface{}) error {
 		// Assign the struct instance to the slice
 		structSlice.Index(i).Set(structInstance)
 	}
-
-	fileName := "output.parquet"
 
 	// Create a regular file
 	f, err := os.Create(fileName)
