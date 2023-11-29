@@ -13,6 +13,8 @@ import (
 	"github.com/xitongsys/parquet-go-source/local"
 	"github.com/xitongsys/parquet-go/parquet"
 	"github.com/xitongsys/parquet-go/writer"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func GenerateParquet(data []map[string]interface{}) error {
@@ -77,10 +79,16 @@ func mapToStructWithTags(sampleMap map[string]interface{}) reflect.Type {
 	// Create a slice to store struct fields
 	var fields []reflect.StructField
 
+	// Create a Title Case mapper for field names
+	mapper := cases.Title(language.English)
+
 	// Iterate over the map and add fields to the slice with types
 	for key, value := range sampleMap {
+		// Ensure that the generated struct field is exported
+		fieldName := mapper.String(key)
+
 		fields = append(fields, reflect.StructField{
-			Name: key,
+			Name: fieldName,
 			Type: reflect.TypeOf(value),
 			Tag:  reflect.StructTag(fmt.Sprintf(`parquet:"name=%s, type=%s, encoding=PLAIN_DICTIONARY" json:"%s"`, key, reflect.TypeOf(value), key)),
 		})
