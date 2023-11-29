@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -16,6 +17,32 @@ import (
 	"golang.org/x/text/language"
 )
 
+func ReadParquet(fileName string, structType reflect.Type) ([]map[string]interface{}, error) {
+	rf, _ := os.Open(fileName)
+	pf := parquet.NewReader(rf)
+	defer rf.Close()
+	defer pf.Close()
+
+	var results reflect.Value
+	var data []map[string]interface{}
+	results = reflect.MakeSlice(reflect.SliceOf(structType), 0, 0)
+
+	for {
+		err := pf.Read(results.Addr().Interface())
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	for i := 0; i < results.Len(); i++ {
+		data = append(data, StructToMap(results.Index(i)))
+	}
+
+	return data, nil
+}
 func GenerateParquet(data []map[string]interface{}) error {
 	log.Println("generating parquet file")
 
