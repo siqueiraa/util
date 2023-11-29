@@ -17,31 +17,37 @@ import (
 	"golang.org/x/text/language"
 )
 
-func ReadParquet(fileName string, structType reflect.Type) ([]map[string]interface{}, error) {
+func ReadParquet(fileName string, slicePtr interface{}) error {
 	rf, _ := os.Open(fileName)
 	pf := parquet.NewReader(rf)
 	defer rf.Close()
 	defer pf.Close()
 
-	var results reflect.Value
-	var data []map[string]interface{}
-	results = reflect.MakeSlice(reflect.SliceOf(structType), 0, 0)
+	// Ensure that slicePtr is a pointer to a slice
+	sliceValue := reflect.ValueOf(slicePtr)
+	if sliceValue.Kind() != reflect.Ptr || sliceValue.Elem().Kind() != reflect.Slice {
+		return errors.New("slicePtr must be a pointer to a slice")
+	}
 
 	for {
-		err := pf.Read(results.Addr().Interface())
+		// Create a new element of the slice's type
+		elemType := sliceValue.Elem().Type().Elem()
+		elem := reflect.New(elemType).Elem()
+
+		// Read a row into the element
+		err := pf.Read(elem.Addr().Interface())
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
+
+		// Append the element to the slice
+		sliceValue.Elem().Set(reflect.Append(sliceValue.Elem(), elem))
 	}
 
-	for i := 0; i < results.Len(); i++ {
-		data = append(data, StructToMap(results.Index(i)))
-	}
-
-	return data, nil
+	return nil
 }
 func GenerateParquet(data []map[string]interface{}) error {
 	log.Println("generating parquet file")
