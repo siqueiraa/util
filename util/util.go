@@ -38,9 +38,18 @@ func GenerateParquet(data []map[string]interface{}) error {
 
 		// Set values for each field
 		for key, value := range mapData {
-			field := structInstance.FieldByName(key)
+			// Use title case mapping for the key
+			fieldName := cases.Title(language.English).String(key)
+
+			field := structInstance.FieldByName(fieldName)
 			if field.IsValid() {
-				field.Set(reflect.ValueOf(value))
+				// Convert the value to the field's type before setting
+				fieldValue := reflect.ValueOf(value)
+				if fieldValue.Type() == field.Type() {
+					field.Set(fieldValue)
+				}
+			} else {
+				fmt.Printf("Invalid field: %s\n", key)
 			}
 		}
 
