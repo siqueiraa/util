@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"os"
 	"reflect"
@@ -50,8 +49,6 @@ func ReadParquet(fileName string, slicePtr interface{}) error {
 	return nil
 }
 func GenerateParquet(data []map[string]interface{}, fileName string) error {
-	log.Println("generating parquet file")
-
 	// Get the sample map from the first element
 	if len(data) == 0 {
 		return errors.New("empty data slice")
