@@ -56,7 +56,14 @@ func GenerateParquet(data []map[string]interface{}) error {
 		structSlice.Index(i).Set(structInstance)
 	}
 
-	f, _ := os.CreateTemp("", "parquet-example-")
+	fileName := "output.parquet"
+
+	// Create a regular file
+	f, err := os.Create(fileName)
+
+	if err != nil {
+		return err
+	}
 	writer := parquet.NewWriter(f)
 
 	// Write each struct instance to Parquet
