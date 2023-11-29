@@ -6,6 +6,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"path/filepath"
 	"reflect"
 	"sort"
 	"strconv"
@@ -15,6 +16,15 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func GetParentDirectory() (string, error) {
+	path, err := os.Executable()
+	if err != nil {
+		fmt.Println("Error:", err)
+		return "", err
+	}
+	return filepath.Abs(filepath.Dir(filepath.Dir(path)))
+}
 
 func ReadParquet(fileName string, slicePtr interface{}) error {
 	rf, _ := os.Open(fileName)
