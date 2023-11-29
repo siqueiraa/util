@@ -78,7 +78,6 @@ func GenerateParquet(data []map[string]interface{}) error {
 func mapToStructWithTags(sampleMap map[string]interface{}) reflect.Type {
 	// Create a slice to store struct fields
 	var fields []reflect.StructField
-
 	// Create a Title Case mapper for field names
 	mapper := cases.Title(language.English)
 
