@@ -27,10 +27,13 @@ func GetParentDirectory() (string, error) {
 }
 
 func ReadParquet(fileName string, slicePtr interface{}) error {
-	rf, _ := os.Open(fileName)
+	rf, err := os.Open(fileName)
+	if err != nil {
+		return err
+	}
 	pf := parquet.NewReader(rf)
 	defer rf.Close()
-	defer pf.Close()
+	//defer pf.Close()
 
 	// Ensure that slicePtr is a pointer to a slice
 	sliceValue := reflect.ValueOf(slicePtr)
