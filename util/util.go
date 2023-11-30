@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -13,6 +14,8 @@ import (
 	"time"
 
 	"github.com/parquet-go/parquet-go"
+	"github.com/xitongsys/parquet-go-source/local"
+	"github.com/xitongsys/parquet-go/reader"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -27,13 +30,20 @@ func GetParentDirectory() (string, error) {
 }
 
 func ReadParquet(fileName string, slicePtr interface{}) error {
-	rf, err := os.Open(fileName)
+	rf, err := local.NewLocalFileReader(fileName)
+
 	if err != nil {
 		return err
 	}
-	pf := parquet.NewReader(rf)
+
+	pf, err := reader.NewParquetReader(rf, nil, 4)
+
+	if err != nil {
+		log.Fatalf("Failed to create reader: %v", err)
+	}
+
 	defer rf.Close()
-	//defer pf.Close()
+	defer pf.ReadStop()
 
 	// Ensure that slicePtr is a pointer to a slice
 	sliceValue := reflect.ValueOf(slicePtr)
