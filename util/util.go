@@ -287,7 +287,7 @@ func CalculatePercentageDifference(a, b float64) float64 {
 		return 0
 	}
 
-	percentageDifference := ((b - a) / a) * 100
+	percentageDifference := ((b - a) / a)
 	return percentageDifference
 }
 
