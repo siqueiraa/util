@@ -225,7 +225,7 @@ func FormatCorrectTypes(data []map[string]interface{}) []map[string]interface{} 
 
 // ResampleOHLCV takes a slice of OHLCV data (as maps) and resamples it to the specified time frame
 func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration) []map[string]interface{} {
-	resampledData := make([]map[string]interface{}, 0)
+	resampledData := make(map[string]map[string]interface{})
 
 	for _, entry := range data {
 		entryTime, ok := entry["time"].(time.Time)
@@ -243,14 +243,16 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 		// Round the entry time to the nearest targetTimeFrame interval
 		roundedTime := roundToInterval(entryTime, targetTimeFrame)
 
+		// Create a composite key using symbol and roundedTime
+		key := symbol + roundedTime.Format(time.RFC3339)
+
 		// Check if the current interval has started
-		if len(resampledData) == 0 || resampledData[len(resampledData)-1]["symbol"] != symbol {
+		if _, exists := resampledData[key]; !exists {
 			// Create a new OHLCV entry for the next targetTimeFrame interval
-			newOHLCV := map[string]interface{}{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol}
-			resampledData = append(resampledData, newOHLCV)
+			resampledData[key] = map[string]interface{}{"time": roundedTime, "high": entry["high"], "low": entry["low"], "close": entry["close"], "volume": entry["volume"], "symbol": symbol}
 		} else {
 			// Update the current OHLCV with the new data
-			lastOHLCV := resampledData[len(resampledData)-1]
+			lastOHLCV := resampledData[key]
 			lastOHLCV["high"] = max(lastOHLCV["high"].(float64), entry["high"].(float64))
 			lastOHLCV["low"] = min(lastOHLCV["low"].(float64), entry["low"].(float64))
 			lastOHLCV["close"] = entry["close"]
@@ -261,7 +263,13 @@ func ResampleOHLCV(data []map[string]interface{}, targetTimeFrame time.Duration)
 		}
 	}
 
-	return resampledData
+	// Convert the map to a slice
+	resampledSlice := make([]map[string]interface{}, 0, len(resampledData))
+	for _, value := range resampledData {
+		resampledSlice = append(resampledSlice, value)
+	}
+
+	return resampledSlice
 }
 
 func roundToInterval(t time.Time, interval time.Duration) time.Time {
