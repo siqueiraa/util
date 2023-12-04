@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"time"
@@ -16,6 +17,28 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func ExtractTimestampFromErrorMessage(errorMessage string) (int64, error) {
+	// Define a regular expression to find the timestamp in the error message
+	re := regexp.MustCompile(`banned until (\d+)\.`)
+
+	// Find the matches in the error message
+	matches := re.FindStringSubmatch(errorMessage)
+	if len(matches) < 2 {
+		return 0, fmt.Errorf("timestamp not found in error message")
+	}
+
+	// Extract the timestamp string
+	timestampString := matches[1]
+
+	// Convert the timestamp string to an integer
+	timestamp, err := strconv.ParseInt(timestampString, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("error converting timestamp to integer: %v", err)
+	}
+
+	return timestamp, nil
+}
 
 func GetParentDirectory() (string, error) {
 	path, err := os.Executable()
