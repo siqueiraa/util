@@ -20,7 +20,7 @@ import (
 
 func TimeUntilNext5Minutes() time.Duration {
 	now := time.Now()
-	roundedTime := now.Round(5 * time.Minute)
+	roundedTime := now.Truncate(5 * time.Minute)
 	next5Minutes := roundedTime.Add(5 * time.Minute)
 	remainingTime := next5Minutes.Sub(now)
 	return remainingTime
