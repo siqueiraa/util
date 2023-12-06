@@ -18,6 +18,13 @@ import (
 	"golang.org/x/text/language"
 )
 
+func TimeUntilNext5Minutes() time.Duration {
+	now := time.Now()
+	roundedTime := now.Round(5 * time.Minute)
+	next5Minutes := roundedTime.Add(5 * time.Minute)
+	remainingTime := next5Minutes.Sub(now)
+	return remainingTime
+}
 func ExtractTimestampFromErrorMessage(errorMessage string) (int64, error) {
 	// Define a regular expression to find the timestamp in the error message
 	re := regexp.MustCompile(`banned until (\d+)\.`)
