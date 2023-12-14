@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -17,6 +18,43 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func CreateLogger(fileName string, path ...string) (*log.Logger, *os.File, error) {
+	var logFilePath string
+
+	// If path is not provided, use the project path
+	if len(path) == 0 {
+		projectPath, err := os.Getwd()
+		if err != nil {
+			return nil, nil, err
+		}
+		logFilePath = filepath.Join(projectPath, fileName)
+	} else {
+		logFilePath = filepath.Join(path[0], fileName)
+	}
+
+	// Check if the log file exists
+	if _, err := os.Stat(logFilePath); os.IsNotExist(err) {
+		// Log file doesn't exist, create it
+		logFile, err := os.Create(logFilePath)
+		if err != nil {
+			return nil, nil, err
+		}
+		logger := log.New(logFile, "", log.LstdFlags)
+		return logger, logFile, nil
+	}
+
+	// Log file already exists, open it for appending
+	logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	logger := log.New(logFile, "", log.LstdFlags)
+	logger.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
+
+	return logger, logFile, nil
+}
 
 func TimeUntilNext5Minutes() time.Duration {
 	now := time.Now()
