@@ -19,18 +19,38 @@ import (
 	"golang.org/x/text/language"
 )
 
-func CreateLogger(fileName string, path ...string) (*log.Logger, *os.File, error) {
+const defaultMaxSizeInBytes = int64(1024 * 1024) // 1 MB
+
+func CreateLogger(fileName string, options ...interface{}) (*log.Logger, *os.File, error) {
 	var logFilePath string
+	var path string
+	var maxSizeInBytes int64
+
+	// Process options
+	for _, option := range options {
+		switch opt := option.(type) {
+		case string:
+			path = opt
+		case int64:
+			maxSizeInBytes = opt
+		}
+	}
 
 	// If path is not provided, use the project path
-	if len(path) == 0 {
+	if path == "" {
 		projectPath, err := os.Getwd()
 		if err != nil {
 			return nil, nil, err
 		}
 		logFilePath = filepath.Join(projectPath, fileName)
 	} else {
-		logFilePath = filepath.Join(path[0], fileName)
+		logFilePath = filepath.Join(path, fileName)
+	}
+
+	// Check if maxSizeInBytes is provided by the user
+	if maxSizeInBytes == 0 {
+		// Use the default size if maxSizeInBytes is not provided
+		maxSizeInBytes = defaultMaxSizeInBytes
 	}
 
 	// Check if the log file exists
@@ -40,7 +60,7 @@ func CreateLogger(fileName string, path ...string) (*log.Logger, *os.File, error
 		if err != nil {
 			return nil, nil, err
 		}
-		logger := log.New(logFile, "", log.LstdFlags)
+		logger := log.New(logFile, "", log.LstdFlags|log.Lmicroseconds)
 		return logger, logFile, nil
 	}
 
@@ -50,8 +70,24 @@ func CreateLogger(fileName string, path ...string) (*log.Logger, *os.File, error
 		return nil, nil, err
 	}
 
-	logger := log.New(logFile, "", log.LstdFlags)
-	logger.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds)
+	// Check if the log file exceeds the specified size limit
+	fileInfo, err := logFile.Stat()
+	if err != nil {
+		return nil, nil, err
+	}
+	if fileInfo.Size() > maxSizeInBytes {
+		// Truncate the log file
+		err = logFile.Truncate(0)
+		if err != nil {
+			return nil, nil, err
+		}
+		_, err = logFile.Seek(0, 0)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	logger := log.New(logFile, "", log.LstdFlags|log.Lmicroseconds)
 
 	return logger, logFile, nil
 }
