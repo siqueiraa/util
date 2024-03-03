@@ -34,6 +34,7 @@ func RecoverPanic(loggerErrorTrigger *log.Logger) {
 		}
 
 		_, file, line, ok := runtime.Caller(3)
+
 		if ok {
 			loggerErrorTrigger.Printf("Recovered by panic  - %s:%d: %v\n", file, line, err)
 		} else {
