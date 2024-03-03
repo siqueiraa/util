@@ -40,7 +40,6 @@ func RecoverPanic(loggerErrorTrigger *log.Logger) {
 			loggerErrorTrigger.Printf("Recovered by panic: %v\n", err)
 		}
 
-		// Registra a stack trace completa
 		loggerErrorTrigger.Println("Stack trace completa:")
 		loggerErrorTrigger.Println(string(debug.Stack()))
 	}
