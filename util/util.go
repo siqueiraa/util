@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"time"
@@ -18,6 +20,31 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+func RecoverPanic(loggerErrorTrigger *log.Logger) {
+	if r := recover(); r != nil {
+		var err error
+		switch x := r.(type) {
+		case string:
+			err = fmt.Errorf("%s", x)
+		case error:
+			err = x
+		default:
+			err = fmt.Errorf("unknowed panic")
+		}
+
+		_, file, line, ok := runtime.Caller(3)
+		if ok {
+			loggerErrorTrigger.Printf("Recovered by panic  - %s:%d: %v\n", file, line, err)
+		} else {
+			loggerErrorTrigger.Printf("Recovered by panic: %v\n", err)
+		}
+
+		// Registra a stack trace completa
+		loggerErrorTrigger.Println("Stack trace completa:")
+		loggerErrorTrigger.Println(string(debug.Stack()))
+	}
+}
 
 const defaultMaxSizeInBytes = int64(1024 * 1024) // 1 MB
 
