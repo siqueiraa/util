@@ -32,7 +32,6 @@ func RecoverPanic(loggerErrorTrigger *log.Logger) {
 		default:
 			err = fmt.Errorf("unknowed panic")
 		}
-
 		_, file, line, ok := runtime.Caller(3)
 
 		if ok {
