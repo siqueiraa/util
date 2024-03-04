@@ -21,7 +21,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func RecoverPanic(loggerErrorTrigger *log.Logger) {
+func RecoverPanic(loggerErrorTrigger *log.Logger, restartFn func()) {
 	if r := recover(); r != nil {
 		var err error
 		switch x := r.(type) {
@@ -30,18 +30,22 @@ func RecoverPanic(loggerErrorTrigger *log.Logger) {
 		case error:
 			err = x
 		default:
-			err = fmt.Errorf("unknowed panic")
+			err = fmt.Errorf("unknown panic")
 		}
-		_, file, line, ok := runtime.Caller(3)
-
+		_, file, line, ok := runtime.Caller(2) // Note: Changed to 2 to capture the direct caller
 		if ok {
-			loggerErrorTrigger.Printf("Recovered by panic  - %s:%d: %v\n", file, line, err)
+			loggerErrorTrigger.Printf("Recovered from panic - %s:%d: %v\n", file, line, err)
 		} else {
-			loggerErrorTrigger.Printf("Recovered by panic: %v\n", err)
+			loggerErrorTrigger.Printf("Recovered from panic: %v\n", err)
 		}
+		loggerErrorTrigger.Printf("Stack trace:\n%s\n", string(debug.Stack()))
 
-		loggerErrorTrigger.Println("Stack trace completa:")
-		loggerErrorTrigger.Println(string(debug.Stack()))
+		// Check if a restart function was provided
+		if restartFn != nil {
+			// Log the restart attempt
+			loggerErrorTrigger.Println("Attempting to restart the function...")
+			go restartFn()
+		}
 	}
 }
 
