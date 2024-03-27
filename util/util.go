@@ -22,6 +22,18 @@ import (
 	"golang.org/x/text/language"
 )
 
+func CreateLoggerDocker(prefix string, useStderr bool) *log.Logger {
+	var output *os.File
+	if useStderr {
+		output = os.Stderr
+	} else {
+		output = os.Stdout
+	}
+
+	logger := log.New(output, prefix, log.LstdFlags|log.Lmicroseconds)
+	return logger
+}
+
 func RecoverPanic(loggerErrorTrigger *log.Logger, restartFn func()) {
 	if r := recover(); r != nil {
 		var err error
