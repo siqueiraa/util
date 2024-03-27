@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/parquet-go/parquet-go"
 	"golang.org/x/text/cases"
