@@ -34,6 +34,16 @@ func CreateLoggerDocker(prefix string, useStderr bool) *log.Logger {
 	return logger
 }
 
+func CreateSubsetMap(originalMap map[string]interface{}, fields []string) map[string]interface{} {
+	subset := make(map[string]interface{})
+	for _, field := range fields {
+		if value, exists := originalMap[field]; exists {
+			subset[field] = value
+		}
+	}
+	return subset
+}
+
 func RecoverPanic(loggerErrorTrigger *log.Logger, restartFn func()) {
 	if r := recover(); r != nil {
 		var err error
