@@ -488,8 +488,12 @@ func Convert_ts_to_tz(x int64, tz string) (time.Time, error) {
 		return time.Time{}, err
 	}
 
+	// Divide x por 1000 para obter os segundos e usa o resto para os milissegundos
 	timestampSeconds := x / 1000
-	t := time.Unix(timestampSeconds, 0).In(loc)
+	millisRemainder := x % 1000
+
+	// Converte os milissegundos em nanossegundos para o segundo parâmetro de time.Unix
+	t := time.Unix(timestampSeconds, millisRemainder*1000000).In(loc)
 
 	return t, nil
 }
